@@ -20,7 +20,9 @@ export function formatPercent(valor: number, casas = 1): string {
 }
 
 export function formatDate(data: string | Date): string {
-  const d = typeof data === 'string' ? new Date(data + 'T00:00:00') : data
+  const d = typeof data === 'string'
+    ? (data.includes('T') ? new Date(data) : new Date(data + 'T00:00:00'))
+    : data
   return new Intl.DateTimeFormat('pt-BR').format(d)
 }
 
