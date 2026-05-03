@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { listarPagamentosAsaas } from '@/lib/asaas'
+import { listarTodosPagamentosAsaas } from '@/lib/asaas'
 import { decriptografar } from '@/lib/cripto'
 import { primeiroDiaMes, ultimoDiaMes, formatDateISO } from '@/lib/formatters'
 
@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
   for (const cfg of configs) {
     try {
       const apiKey = await decriptografar(cfg.asaas_api_key_enc)
-      const resultado = await listarPagamentosAsaas(apiKey, cfg.asaas_ambiente, dataInicio, dataFim)
+      const pagamentos = await listarTodosPagamentosAsaas(apiKey, cfg.asaas_ambiente, dataInicio, dataFim)
 
-      for (const pagamento of resultado.data) {
+      for (const pagamento of pagamentos) {
         const { data: cliente } = await supabase
           .from('clientes')
           .select('id')

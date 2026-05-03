@@ -29,3 +29,22 @@ export async function GET() {
     return NextResponse.json({ ok: false, mensagem: 'Erro ao decriptografar API Key' })
   }
 }
+
+// Permite testar com a chave digitada no formulário antes de salvar
+export async function POST(request: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ ok: false, mensagem: 'Não autenticado' }, { status: 401 })
+  }
+
+  const { apiKey, ambiente } = await request.json()
+
+  if (!apiKey) {
+    return NextResponse.json({ ok: false, mensagem: 'Informe a API Key antes de testar' })
+  }
+
+  const resultado = await testarConexaoAsaas(apiKey, ambiente ?? 'sandbox')
+  return NextResponse.json(resultado)
+}

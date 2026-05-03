@@ -19,31 +19,44 @@ export interface AsaasResponse<T> {
   hasMore: boolean
 }
 
-export async function listarPagamentosAsaas(
+export async function listarTodosPagamentosAsaas(
   apiKey: string,
   ambiente: 'sandbox' | 'producao',
   dataInicio: string,
   dataFim: string
-): Promise<AsaasResponse<AsaasPayment>> {
+): Promise<AsaasPayment[]> {
   const base = BASE_URL[ambiente]
-  const params = new URLSearchParams({
-    status: 'RECEIVED',
-    'paymentDate[ge]': dataInicio,
-    'paymentDate[le]': dataFim,
-    limit: '100',
-  })
+  const todos: AsaasPayment[] = []
+  let offset = 0
+  const limit = 100
 
-  const res = await fetch(`${base}/payments?${params}`, {
-    headers: { access_token: apiKey },
-    cache: 'no-store',
-  })
+  while (true) {
+    const params = new URLSearchParams({
+      status: 'RECEIVED',
+      'paymentDate[ge]': dataInicio,
+      'paymentDate[le]': dataFim,
+      limit: String(limit),
+      offset: String(offset),
+    })
 
-  if (!res.ok) {
-    const corpo = await res.text()
-    throw new Error(`Asaas retornou ${res.status}: ${corpo}`)
+    const res = await fetch(`${base}/payments?${params}`, {
+      headers: { access_token: apiKey },
+      cache: 'no-store',
+    })
+
+    if (!res.ok) {
+      const corpo = await res.text()
+      throw new Error(`Asaas retornou ${res.status}: ${corpo}`)
+    }
+
+    const json: AsaasResponse<AsaasPayment> = await res.json()
+    todos.push(...json.data)
+
+    if (!json.hasMore) break
+    offset += limit
   }
 
-  return res.json()
+  return todos
 }
 
 export async function testarConexaoAsaas(

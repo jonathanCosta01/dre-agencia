@@ -25,6 +25,7 @@ export default function ConfiguracoesPage() {
   const [percentualImposto, setPercentualImposto] = useState('6.00')
   const [asaasKey, setAsaasKey] = useState('')
   const [ambiente, setAmbiente] = useState<'sandbox' | 'producao'>('sandbox')
+  const [chaveSalva, setChaveSalva] = useState(false)
   const [mostrarKey, setMostrarKey] = useState(false)
   const [testandoConexao, setTestandoConexao] = useState(false)
   const [resultadoTeste, setResultadoTeste] = useState<{ ok: boolean; mensagem: string } | null>(null)
@@ -48,6 +49,7 @@ export default function ConfiguracoesPage() {
       setCnpj(cfg.documento_cnpj ?? '')
       setPercentualImposto(String(cfg.percentual_imposto ?? '6.00'))
       setAmbiente(cfg.asaas_ambiente ?? 'sandbox')
+      setChaveSalva(!!cfg.asaas_api_key_enc)
     }
     setCustosRecorrentes((cus as Custo[]) ?? [])
   }
@@ -63,7 +65,7 @@ export default function ConfiguracoesPage() {
       user_id: user.id,
       nome_agencia: nomeAgencia,
       documento_cnpj: cnpj,
-    })
+    }, { onConflict: 'user_id' })
     if (error) { toast.error('Erro ao salvar'); return }
     toast.success('Perfil atualizado!')
   }
@@ -76,7 +78,7 @@ export default function ConfiguracoesPage() {
     const { error } = await supabase.from('configuracoes').upsert({
       user_id: user.id,
       percentual_imposto: parseFloat(percentualImposto),
-    })
+    }, { onConflict: 'user_id' })
     if (error) { toast.error('Erro ao salvar'); return }
     toast.success('Configuração fiscal salva!')
   }
@@ -84,7 +86,16 @@ export default function ConfiguracoesPage() {
   async function testarConexao() {
     setTestandoConexao(true)
     setResultadoTeste(null)
-    const res = await fetch('/api/asaas/test')
+
+    // Se há chave no campo, testa direto sem precisar salvar antes
+    const res = asaasKey
+      ? await fetch('/api/asaas/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey: asaasKey, ambiente }),
+        })
+      : await fetch('/api/asaas/test')
+
     const data = await res.json()
     setResultadoTeste(data)
     setTestandoConexao(false)
@@ -126,7 +137,7 @@ export default function ConfiguracoesPage() {
       }
     }
 
-    const { error } = await supabase.from('configuracoes').upsert(payload)
+    const { error } = await supabase.from('configuracoes').upsert(payload, { onConflict: 'user_id' })
     if (error) { toast.error('Erro ao salvar'); return }
     toast.success('Configurações do Asaas salvas!')
     setAsaasKey('')
@@ -234,24 +245,39 @@ export default function ConfiguracoesPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="asaasKey">API Key do Asaas</Label>
-            <div className="relative">
-              <Input
-                id="asaasKey"
-                type={mostrarKey ? 'text' : 'password'}
-                placeholder="$aact_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                value={asaasKey}
-                onChange={(e) => setAsaasKey(e.target.value)}
-                className="pr-10 focus-visible:ring-orange-500"
-              />
-              <button
-                type="button"
-                onClick={() => setMostrarKey(!mostrarKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-                aria-label={mostrarKey ? 'Ocultar API Key' : 'Mostrar API Key'}
-              >
-                {mostrarKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
+            {chaveSalva && !asaasKey && (
+              <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 dark:border-green-800 dark:bg-green-950">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+                <span className="text-xs text-green-700 dark:text-green-400">Chave configurada e salva com segurança</span>
+                <button
+                  type="button"
+                  onClick={() => setChaveSalva(false)}
+                  className="ml-auto text-xs text-zinc-400 underline hover:text-zinc-600"
+                >
+                  Substituir
+                </button>
+              </div>
+            )}
+            {(!chaveSalva || asaasKey) && (
+              <div className="relative">
+                <Input
+                  id="asaasKey"
+                  type={mostrarKey ? 'text' : 'password'}
+                  placeholder="$aact_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  value={asaasKey}
+                  onChange={(e) => setAsaasKey(e.target.value)}
+                  className="pr-10 focus-visible:ring-orange-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarKey(!mostrarKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                  aria-label={mostrarKey ? 'Ocultar API Key' : 'Mostrar API Key'}
+                >
+                  {mostrarKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            )}
             <p className="text-xs text-zinc-500">
               Armazenada com criptografia AES-256-GCM. Nunca exposta no frontend.
             </p>
@@ -279,7 +305,7 @@ export default function ConfiguracoesPage() {
             </Button>
           </div>
 
-          {config.ultima_sincronizacao && (
+          {config.ultima_sincronizacao && !isNaN(new Date(config.ultima_sincronizacao).getTime()) && (
             <p className="text-xs text-zinc-500">
               Última sincronização: {formatDate(config.ultima_sincronizacao)}
             </p>

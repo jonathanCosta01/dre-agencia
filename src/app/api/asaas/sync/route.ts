@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { listarPagamentosAsaas } from '@/lib/asaas'
+import { listarTodosPagamentosAsaas } from '@/lib/asaas'
 import { decriptografar } from '@/lib/cripto'
-import { primeiroDiaMes, ultimoDiaMes, formatDateISO } from '@/lib/formatters'
 
 export async function POST() {
   const supabase = await createClient()
@@ -29,17 +28,17 @@ export async function POST() {
     return NextResponse.json({ erro: 'Erro ao decriptografar API Key' }, { status: 500 })
   }
 
-  const agora = new Date()
-  const dataInicio = formatDateISO(primeiroDiaMes(agora))
-  const dataFim = formatDateISO(ultimoDiaMes(agora))
+  // Busca todo o histórico: de 2020 até hoje
+  const dataInicio = '2020-01-01'
+  const dataFim = new Date().toISOString().split('T')[0]
 
   let sincronizados = 0
   let erros = 0
 
   try {
-    const resultado = await listarPagamentosAsaas(apiKey, cfg.asaas_ambiente, dataInicio, dataFim)
+    const pagamentos = await listarTodosPagamentosAsaas(apiKey, cfg.asaas_ambiente, dataInicio, dataFim)
 
-    for (const pagamento of resultado.data) {
+    for (const pagamento of pagamentos) {
       const { data: cliente } = await supabase
         .from('clientes')
         .select('id')
