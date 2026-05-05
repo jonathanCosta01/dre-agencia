@@ -6,20 +6,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/formatters'
-import { CATEGORIAS } from '@/types'
 import { toast } from 'sonner'
-import type { Configuracao, Custo } from '@/types'
-import { FormCusto } from '@/components/lancamentos/FormCusto'
+import type { Configuracao } from '@/types'
 
 export default function ConfiguracoesPage() {
   const [config, setConfig] = useState<Partial<Configuracao>>({})
-  const [custosRecorrentes, setCustosRecorrentes] = useState<Custo[]>([])
   const [nomeAgencia, setNomeAgencia] = useState('')
   const [cnpj, setCnpj] = useState('')
   const [percentualImposto, setPercentualImposto] = useState('6.00')
@@ -30,18 +25,13 @@ export default function ConfiguracoesPage() {
   const [testandoConexao, setTestandoConexao] = useState(false)
   const [resultadoTeste, setResultadoTeste] = useState<{ ok: boolean; mensagem: string } | null>(null)
   const [sincronizando, setSincronizando] = useState(false)
-  const [modalCusto, setModalCusto] = useState(false)
-  const [editandoCusto, setEditandoCusto] = useState<Custo | null>(null)
 
   async function carregarDados() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const [{ data: cfg }, { data: cus }] = await Promise.all([
-      supabase.from('configuracoes').select('*').eq('user_id', user.id).single(),
-      supabase.from('custos').select('*').eq('user_id', user.id).eq('recorrente', true).order('descricao'),
-    ])
+    const { data: cfg } = await supabase.from('configuracoes').select('*').eq('user_id', user.id).single()
 
     if (cfg) {
       setConfig(cfg as Configuracao)
@@ -51,7 +41,6 @@ export default function ConfiguracoesPage() {
       setAmbiente(cfg.asaas_ambiente ?? 'sandbox')
       setChaveSalva(!!cfg.asaas_api_key_enc)
     }
-    setCustosRecorrentes((cus as Custo[]) ?? [])
   }
 
   useEffect(() => { carregarDados() }, [])
@@ -141,12 +130,6 @@ export default function ConfiguracoesPage() {
     if (error) { toast.error('Erro ao salvar'); return }
     toast.success('Configurações do Asaas salvas!')
     setAsaasKey('')
-  }
-
-  async function toggleAtivoCusto(id: string, ativo: boolean) {
-    const supabase = createClient()
-    await supabase.from('custos').update({ ativo }).eq('id', id)
-    carregarDados()
   }
 
   return (
@@ -316,58 +299,6 @@ export default function ConfiguracoesPage() {
         </CardContent>
       </Card>
 
-      <Separator />
-
-      {/* Custos Recorrentes */}
-      <Card className="border-zinc-200 dark:border-zinc-800">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-base">Custos Recorrentes</CardTitle>
-            <CardDescription>Custos que se repetem todo mês.</CardDescription>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => { setEditandoCusto(null); setModalCusto(true) }}
-            className="bg-orange-500 text-white hover:bg-orange-600"
-          >
-            + Adicionar
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {custosRecorrentes.length === 0 ? (
-            <p className="text-sm text-zinc-400">Nenhum custo recorrente cadastrado.</p>
-          ) : (
-            <div className="space-y-2">
-              {custosRecorrentes.map((c) => (
-                <div key={c.id} className="flex items-center justify-between gap-2 rounded-lg border border-zinc-100 p-3 dark:border-zinc-800">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-50">{c.descricao}</span>
-                      <Badge className={`${CATEGORIAS[c.categoria].corBadge} border-0 text-xs`}>
-                        {CATEGORIAS[c.categoria].label}
-                      </Badge>
-                    </div>
-                    <span className="text-xs text-zinc-500">R$ {Number(c.valor).toFixed(2).replace('.', ',')}</span>
-                  </div>
-                  <Switch
-                    checked={c.ativo}
-                    onCheckedChange={(v) => toggleAtivoCusto(c.id, v)}
-                    aria-label={`${c.ativo ? 'Desativar' : 'Ativar'} custo recorrente`}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <FormCusto
-        aberto={modalCusto}
-        onFechar={() => { setModalCusto(false); setEditandoCusto(null) }}
-        onSalvo={carregarDados}
-        custo={editandoCusto}
-        forcarRecorrente
-      />
     </div>
   )
 }
