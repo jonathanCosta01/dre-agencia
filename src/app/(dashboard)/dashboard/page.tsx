@@ -54,7 +54,7 @@ export default function DashboardPage() {
     const inicio = formatDateISO(filtro.dataInicio)
     const fim = formatDateISO(filtro.dataFim)
 
-    const [{ data: rec }, { data: cus }] = await Promise.all([
+    const [{ data: rec }, { data: cusNoPeriodo }, { data: cusRecorrentes }] = await Promise.all([
       supabase
         .from('receitas')
         .select('*, cliente:clientes(id,nome)')
@@ -67,10 +67,22 @@ export default function DashboardPage() {
         .eq('user_id', user.id)
         .gte('data_competencia', inicio)
         .lte('data_competencia', fim),
+      // custos recorrentes ativos aparecem em todos os meses, independente da competência
+      supabase
+        .from('custos')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('recorrente', true)
+        .eq('ativo', true),
     ])
 
+    const mapaCustos = new Map<string, Custo>()
+    for (const c of [...(cusNoPeriodo ?? []), ...(cusRecorrentes ?? [])]) {
+      mapaCustos.set(c.id, c)
+    }
+
     setReceitas((rec as Receita[]) ?? [])
-    setCustos((cus as Custo[]) ?? [])
+    setCustos(Array.from(mapaCustos.values()))
     setCarregando(false)
   }, [filtro])
 

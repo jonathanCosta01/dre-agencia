@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
   const { dataInicio, dataFim } = await request.json()
 
-  const [{ data: receitas }, { data: custos }] = await Promise.all([
+  const [{ data: receitas }, { data: cusNoPeriodo }, { data: cusRecorrentes }] = await Promise.all([
     supabase
       .from('receitas')
       .select('*, cliente:clientes(id,nome)')
@@ -27,11 +27,23 @@ export async function POST(request: NextRequest) {
       .gte('data_competencia', dataInicio)
       .lte('data_competencia', dataFim)
       .eq('ativo', true),
+    // custos recorrentes ativos entram em todos os meses, independente da competência
+    supabase
+      .from('custos')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('recorrente', true)
+      .eq('ativo', true),
   ])
+
+  const mapaCustos = new Map<string, Custo>()
+  for (const c of [...(cusNoPeriodo ?? []), ...(cusRecorrentes ?? [])]) {
+    mapaCustos.set(c.id, c)
+  }
 
   const dre = calcularDRE(
     (receitas as Receita[]) ?? [],
-    (custos as Custo[]) ?? [],
+    Array.from(mapaCustos.values()),
     { inicio: dataInicio, fim: dataFim }
   )
 
