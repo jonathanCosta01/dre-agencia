@@ -39,7 +39,7 @@ export default function LancamentosPage() {
     const inicio = formatDateISO(filtro.dataInicio)
     const fim = formatDateISO(filtro.dataFim)
 
-    const [{ data: rec }, { data: cus }, { data: cli }] = await Promise.all([
+    const [{ data: rec }, { data: cusNoPeriodo }, { data: cusRecorrentes }, { data: cli }] = await Promise.all([
       supabase
         .from('receitas')
         .select('*, cliente:clientes(id,nome)')
@@ -54,11 +54,23 @@ export default function LancamentosPage() {
         .gte('data_competencia', inicio)
         .lte('data_competencia', fim)
         .order('data_competencia', { ascending: false }),
+      // custos recorrentes ativos entram em todos os meses
+      supabase
+        .from('custos')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('recorrente', true)
+        .eq('ativo', true),
       supabase.from('clientes').select('*').eq('user_id', user.id).eq('ativo', true),
     ])
 
+    const mapaCustos = new Map<string, Custo>()
+    for (const c of [...(cusNoPeriodo ?? []), ...(cusRecorrentes ?? [])]) {
+      mapaCustos.set(c.id, c)
+    }
+
     setReceitas((rec as Receita[]) ?? [])
-    setCustos((cus as Custo[]) ?? [])
+    setCustos(Array.from(mapaCustos.values()))
     setClientes((cli as Cliente[]) ?? [])
   }, [filtro])
 

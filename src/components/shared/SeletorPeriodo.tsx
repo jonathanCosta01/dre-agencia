@@ -59,6 +59,8 @@ export function SeletorPeriodo({ filtro, onChange, compacto = false }: SeletorPe
       setAberto(true)
       return
     }
+    // fechar popover e desativar personalizado ao escolher outro período
+    setAberto(false)
     const { dataInicio, dataFim } = calcularDatas(modo)
     onChange({ modo, dataInicio, dataFim })
   }
@@ -94,7 +96,7 @@ export function SeletorPeriodo({ filtro, onChange, compacto = false }: SeletorPe
         </Button>
       ))}
 
-      <Popover open={aberto} onOpenChange={setAberto}>
+      <Popover open={aberto} onOpenChange={(v) => { if (!v) setAberto(false) }}>
         <PopoverTrigger
           className={cn(
             'inline-flex h-8 items-center justify-center gap-1 rounded-md border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
@@ -117,7 +119,17 @@ export function SeletorPeriodo({ filtro, onChange, compacto = false }: SeletorPe
             numberOfMonths={2}
           />
           <div className="mt-3 flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => setAberto(false)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAberto(false)
+                // se cancelou sem ter aplicado, volta para 'mes' para não deixar personalizado ativo
+                if (filtro.modo !== 'personalizado') return
+                const { dataInicio, dataFim } = calcularDatas('mes')
+                onChange({ modo: 'mes', dataInicio, dataFim })
+              }}
+            >
               Cancelar
             </Button>
             <Button
