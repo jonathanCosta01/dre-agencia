@@ -9,7 +9,9 @@ export function BlocoCustoFixo({ dre }: { dre: DREResult }) {
       valor={dre.totalCustoFixo}
       percentual={dre.percentualCustoFixo}
       icon={Wrench}
-      corProgress="[&>div]:bg-blue-500"
+      corIcone="text-blue-500"
+      corFundo="bg-blue-50"
+      corGrafico="#4F7CFF"
     />
   )
 }

@@ -1,27 +1,26 @@
 import { CheckCircle2 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { BlocoDRE } from './BlocoDRE'
 import type { DREResult } from '@/types'
 
 function badgeMargem(percentual: number) {
   if (percentual > 50) {
     return (
-      <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-0 text-xs">
+      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
         Ótima
-      </Badge>
+      </span>
     )
   }
   if (percentual >= 30) {
     return (
-      <Badge className="bg-yellow-100 text-yellow-700 border-0 text-xs">
+      <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
         Média
-      </Badge>
+      </span>
     )
   }
   return (
-    <Badge className="bg-red-100 text-red-700 border-0 text-xs">
+    <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
       Baixa
-    </Badge>
+    </span>
   )
 }
 
@@ -32,7 +31,9 @@ export function MargemLiquida({ dre }: { dre: DREResult }) {
       valor={dre.margemLiquida}
       percentual={dre.percentualMargemLiquida}
       icon={CheckCircle2}
-      corProgress="[&>div]:bg-green-500"
+      corIcone="text-green-500"
+      corFundo="bg-green-50"
+      corGrafico="#22C55E"
       badge={badgeMargem(dre.percentualMargemLiquida)}
     />
   )

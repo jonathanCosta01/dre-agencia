@@ -9,7 +9,9 @@ export function BlocoImposto({ dre }: { dre: DREResult }) {
       valor={dre.totalImpostos}
       percentual={dre.percentualImposto}
       icon={Landmark}
-      corProgress="[&>div]:bg-red-500"
+      corIcone="text-red-500"
+      corFundo="bg-red-50"
+      corGrafico="#FF4D6D"
     />
   )
 }

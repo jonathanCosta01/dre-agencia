@@ -9,7 +9,9 @@ export function BlocoDespesaVariavel({ dre }: { dre: DREResult }) {
       valor={dre.totalDespesaVariavel}
       percentual={dre.percentualDespesaVariavel}
       icon={BookOpen}
-      corProgress="[&>div]:bg-purple-500"
+      corIcone="text-purple-500"
+      corFundo="bg-purple-50"
+      corGrafico="#A855F7"
     />
   )
 }

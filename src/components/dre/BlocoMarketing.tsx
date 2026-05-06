@@ -9,7 +9,9 @@ export function BlocoMarketing({ dre }: { dre: DREResult }) {
       valor={dre.totalMarketing}
       percentual={dre.percentualMarketing}
       icon={Megaphone}
-      corProgress="[&>div]:bg-yellow-500"
+      corIcone="text-yellow-500"
+      corFundo="bg-yellow-50"
+      corGrafico="#FBBF24"
     />
   )
 }

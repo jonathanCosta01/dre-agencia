@@ -2,15 +2,28 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, LayoutDashboard, ArrowUpDown, Users, Settings, LogOut } from 'lucide-react'
+import {
+  BarChart3,
+  LayoutDashboard,
+  ArrowUpDown,
+  Users,
+  Settings,
+  LogOut,
+  FileBarChart,
+  BarChart2,
+  Target,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/resumo-financeiro', label: 'Resumo Financeiro', icon: FileBarChart },
   { href: '/lancamentos', label: 'Lançamentos', icon: ArrowUpDown },
   { href: '/clientes', label: 'Clientes', icon: Users },
+  { href: '/relatorios', label: 'Relatórios', icon: BarChart2 },
+  { href: '/metas', label: 'Metas', icon: Target },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ]
 
@@ -19,7 +32,22 @@ interface SidebarProps {
   emailUsuario?: string
 }
 
-export function Sidebar({ nomeUsuario, emailUsuario }: SidebarProps) {
+function Avatar({ nome }: { nome: string }) {
+  const iniciais = nome
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
+  return (
+    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FF6B00] to-[#EA580C] text-xs font-bold text-white shadow-sm">
+      {iniciais}
+    </div>
+  )
+}
+
+export function Sidebar({ nomeUsuario = 'Usuário', emailUsuario }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -32,15 +60,17 @@ export function Sidebar({ nomeUsuario, emailUsuario }: SidebarProps) {
   }
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+    <aside className="flex h-full w-60 flex-col border-r border-[#F3F4F6] bg-white">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b border-zinc-200 px-4 dark:border-zinc-800">
-        <BarChart3 className="h-6 w-6 text-orange-500" />
-        <span className="text-lg font-bold text-zinc-900 dark:text-zinc-50">DRE Agência</span>
+      <div className="flex h-16 items-center gap-2.5 border-b border-[#F3F4F6] px-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF6B00] to-[#EA580C] shadow-sm">
+          <BarChart3 className="h-4.5 w-4.5 text-white" style={{ width: 18, height: 18 }} />
+        </div>
+        <span className="text-[15px] font-bold text-[#111827]">DRE Agência</span>
       </div>
 
       {/* Navegação */}
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-0.5 p-3 pt-4">
         {navItems.map((item) => {
           const Icon = item.icon
           const ativo = pathname === item.href || pathname.startsWith(item.href + '/')
@@ -49,33 +79,40 @@ export function Sidebar({ nomeUsuario, emailUsuario }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150',
                 ativo
-                  ? 'bg-orange-50 text-orange-600 dark:bg-orange-950 dark:text-orange-400'
-                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50'
+                  ? 'bg-orange-50 text-[#FF6B00]'
+                  : 'text-[#6B7280] hover:bg-[#F8FAFC] hover:text-[#111827]'
               )}
             >
-              <Icon className="h-4 w-4 flex-shrink-0" />
+              <Icon
+                className={cn('flex-shrink-0', ativo ? 'text-[#FF6B00]' : 'text-[#9CA3AF]')}
+                style={{ width: 16, height: 16 }}
+              />
               {item.label}
+              {ativo && (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#FF6B00]" />
+              )}
             </Link>
           )
         })}
       </nav>
 
       {/* Rodapé */}
-      <div className="border-t border-zinc-200 p-3 dark:border-zinc-800">
-        <div className="mb-2 px-3">
-          <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-50">
-            {nomeUsuario ?? 'Usuário'}
-          </p>
-          <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">{emailUsuario}</p>
+      <div className="border-t border-[#F3F4F6] p-3">
+        <div className="mb-1 flex items-center gap-2.5 rounded-lg px-2 py-2">
+          <Avatar nome={nomeUsuario} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-semibold text-[#111827]">{nomeUsuario}</p>
+            <p className="truncate text-[11px] text-[#9CA3AF]">{emailUsuario}</p>
+          </div>
         </div>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
           aria-label="Sair da conta"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium text-[#6B7280] transition-colors hover:bg-red-50 hover:text-red-600"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut style={{ width: 15, height: 15 }} className="flex-shrink-0" />
           Sair
         </button>
       </div>

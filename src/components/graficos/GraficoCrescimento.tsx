@@ -2,91 +2,100 @@
 
 import { useState } from 'react'
 import {
-  LineChart,
-  Line,
+  Area,
+  AreaChart,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Area,
-  AreaChart,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { formatBRL, formatBRLCompacto } from '@/lib/formatters'
 import { gerarSerieHistorica } from '@/lib/dre-calc'
 import type { Receita } from '@/types'
 
 type Modo = 'diario' | 'mensal' | 'anual'
 
-interface GraficoCrescimentoProps {
-  receitas: Receita[]
+const modos: { key: Modo; label: string }[] = [
+  { key: 'diario', label: 'Diário' },
+  { key: 'mensal', label: 'Mensal' },
+  { key: 'anual', label: 'Anual' },
+]
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-xl border border-[#E5E7EB] bg-white p-3 shadow-lg">
+        <p className="mb-1 text-xs text-[#6B7280]">{label}</p>
+        <p className="text-sm font-bold text-[#FF6B00]">{formatBRL(payload[0].value)}</p>
+      </div>
+    )
+  }
+  return null
 }
 
-export function GraficoCrescimento({ receitas }: GraficoCrescimentoProps) {
+export function GraficoCrescimento({ receitas }: { receitas: Receita[] }) {
   const [modo, setModo] = useState<Modo>('mensal')
   const dados = gerarSerieHistorica(receitas, modo)
 
   return (
-    <Card className="border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-      <CardHeader className="flex flex-row items-center justify-between px-5 pb-2 pt-4">
-        <CardTitle className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
-          Evolução do Faturamento
-        </CardTitle>
-        <div className="flex gap-1">
-          {(['diario', 'mensal', 'anual'] as Modo[]).map((m) => (
-            <Button
-              key={m}
-              variant={modo === m ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setModo(m)}
-              className={modo === m ? 'bg-orange-500 text-white hover:bg-orange-600 h-7 text-xs' : 'h-7 text-xs'}
+    <Card className="border border-[#E5E7EB] bg-white shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between px-6 pb-2 pt-5">
+        <div>
+          <CardTitle className="text-[15px] font-semibold text-[#111827]">
+            Evolução do Faturamento
+          </CardTitle>
+          <p className="mt-0.5 text-xs text-[#6B7280]">Tendência de receitas no período</p>
+        </div>
+        <div className="flex items-center gap-1 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-0.5">
+          {modos.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setModo(key)}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                modo === key
+                  ? 'bg-white text-[#FF6B00] shadow-sm'
+                  : 'text-[#6B7280] hover:text-[#111827]'
+              }`}
             >
-              {m === 'diario' ? 'Diário' : m === 'mensal' ? 'Mensal' : 'Anual'}
-            </Button>
+              {label}
+            </button>
           ))}
         </div>
       </CardHeader>
-      <CardContent className="px-2 pb-4">
+      <CardContent className="px-2 pb-5">
         <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={dados} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+          <AreaChart data={dados} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
             <defs>
-              <linearGradient id="gradienteOrange" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#F97316" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#F97316" stopOpacity={0} />
+              <linearGradient id="gradFaturamento" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#FF6B00" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#FF6B00" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 12, fill: '#71717a' }}
+              tick={{ fontSize: 11, fill: '#9CA3AF' }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               tickFormatter={(v) => formatBRLCompacto(v)}
-              tick={{ fontSize: 12, fill: '#71717a' }}
+              tick={{ fontSize: 11, fill: '#9CA3AF' }}
               axisLine={false}
               tickLine={false}
-              width={70}
+              width={68}
             />
-            <Tooltip
-              formatter={(value) => [formatBRL(Number(value)), 'Faturamento']}
-              labelFormatter={(label) => label}
-              contentStyle={{
-                backgroundColor: 'var(--background)',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                fontSize: '12px',
-              }}
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Area
               type="monotone"
               dataKey="valor"
-              stroke="#F97316"
-              strokeWidth={2}
-              fill="url(#gradienteOrange)"
+              stroke="#FF6B00"
+              strokeWidth={2.5}
+              fill="url(#gradFaturamento)"
+              dot={false}
+              activeDot={{ r: 5, fill: '#FF6B00', strokeWidth: 0 }}
             />
           </AreaChart>
         </ResponsiveContainer>

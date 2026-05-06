@@ -19,7 +19,7 @@ export default async function DashboardLayout({
   const emailUsuario = user.email ?? ''
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen" style={{ backgroundColor: '#F8FAFC' }}>
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-60 lg:flex-col">
         <Sidebar nomeUsuario={nomeUsuario} emailUsuario={emailUsuario} />
