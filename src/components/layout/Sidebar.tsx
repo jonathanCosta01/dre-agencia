@@ -62,11 +62,11 @@ export function Sidebar({ nomeUsuario = 'Usuário', emailUsuario }: SidebarProps
   return (
     <aside className="flex h-full w-60 flex-col border-r border-[#F3F4F6] bg-white">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2.5 border-b border-[#F3F4F6] px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF6B00] to-[#EA580C] shadow-sm">
-          <BarChart3 className="h-4.5 w-4.5 text-white" style={{ width: 18, height: 18 }} />
-        </div>
-        <span className="text-[15px] font-bold text-[#111827]">DRE Agência</span>
+      <div className="flex h-16 items-center gap-2 border-b border-[#F3F4F6] px-5">
+        <BarChart3 className="text-[#FF6B00]" style={{ width: 20, height: 20 }} />
+        <span className="text-[15px] font-bold text-[#111827]">
+          DRE <span className="font-light text-[#6B7280]">Agência</span>
+        </span>
       </div>
 
       {/* Navegação */}
