@@ -67,6 +67,7 @@ export function Sidebar({ nomeUsuario = 'Usuário', emailUsuario }: SidebarProps
         <span className="text-[15px] tracking-tight">
           <span className="font-bold text-[#FF6B00]">DRE</span>
           <span className="font-medium text-[#6B7280]"> agência</span>
+          <span className="ml-1 rounded bg-[#FF6B00] px-1 py-0.5 text-[9px] font-bold text-white">TESTE</span>
         </span>
       </div>
 
