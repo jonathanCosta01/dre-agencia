@@ -67,8 +67,8 @@ export function Sidebar({ nomeUsuario = 'Usuário', emailUsuario }: SidebarProps
           <BarChart3 className="text-white" style={{ width: 15, height: 15 }} />
         </div>
         <span className="text-[15px] tracking-tight">
-          <span className="font-bold text-[#111827]">DRE</span>
-          <span className="font-semibold text-[#FF6B00]"> Agência</span>
+          <span className="font-bold text-[#FF6B00]">DRE</span>
+          <span className="font-semibold text-[#6B7280]"> Agência</span>
         </span>
       </div>
 
