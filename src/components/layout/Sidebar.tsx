@@ -63,11 +63,12 @@ export function Sidebar({ nomeUsuario = 'Usuário', emailUsuario }: SidebarProps
     <aside className="flex h-full w-60 flex-col border-r border-[#F3F4F6] bg-white">
       {/* Logo */}
       <div className="flex h-16 items-center gap-2.5 border-b border-[#F3F4F6] px-5">
-        <BarChart3 className="text-[#FF6B00]" style={{ width: 18, height: 18 }} />
+        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[#FF6B00]">
+          <BarChart3 className="text-white" style={{ width: 15, height: 15 }} />
+        </div>
         <span className="text-[15px] tracking-tight">
-          <span className="font-bold text-[#FF6B00]">DRE</span>
-          <span className="font-medium text-[#6B7280]"> agência</span>
-          <span className="ml-1 rounded bg-[#FF6B00] px-1 py-0.5 text-[9px] font-bold text-white">TESTE</span>
+          <span className="font-bold text-[#111827]">DRE</span>
+          <span className="font-semibold text-[#FF6B00]"> Agência</span>
         </span>
       </div>
 
