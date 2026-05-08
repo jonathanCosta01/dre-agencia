@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Search, Pencil, UserX } from 'lucide-react'
+import { Plus, Search, Pencil, UserX, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { EstadoVazio } from '@/components/shared/EstadoVazio'
@@ -35,6 +36,8 @@ export default function ClientesPage() {
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState<Cliente | null>(null)
   const [salvando, setSalvando] = useState(false)
+  const [clienteParaExcluir, setClienteParaExcluir] = useState<Cliente | null>(null)
+  const [excluindo, setExcluindo] = useState(false)
 
   const form = useForm<FormCliente>({
     resolver: zodResolver(schemaCliente),
@@ -109,6 +112,21 @@ export default function ClientesPage() {
     setModalAberto(false)
     buscarClientes()
     setSalvando(false)
+  }
+
+  async function excluir() {
+    if (!clienteParaExcluir) return
+    setExcluindo(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('clientes').delete().eq('id', clienteParaExcluir.id)
+    if (error) {
+      toast.error('Erro ao excluir cliente')
+    } else {
+      toast.success('Cliente excluído com sucesso')
+      buscarClientes()
+    }
+    setClienteParaExcluir(null)
+    setExcluindo(false)
   }
 
   async function inativar(id: string, ativo: boolean) {
@@ -197,12 +215,44 @@ export default function ClientesPage() {
                     <UserX className="mr-1 h-3 w-3" />
                     {c.ativo ? 'Inativar' : 'Reativar'}
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setClienteParaExcluir(c)}
+                    className="flex-1 text-xs text-red-600 hover:border-red-300 hover:text-red-700"
+                    aria-label="Excluir cliente"
+                  >
+                    <Trash2 className="mr-1 h-3 w-3" />
+                    Excluir
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!clienteParaExcluir} onOpenChange={(v) => { if (!v) setClienteParaExcluir(null) }}>
+        <AlertDialogContent aria-labelledby="excluir-titulo" aria-describedby="excluir-desc">
+          <AlertDialogHeader>
+            <AlertDialogTitle id="excluir-titulo">Excluir cliente</AlertDialogTitle>
+            <AlertDialogDescription id="excluir-desc">
+              Tem certeza que deseja excluir <strong>{clienteParaExcluir?.nome}</strong>? Esta ação não pode ser desfeita.
+              As receitas vinculadas a este cliente serão mantidas, porém ficarão sem cliente associado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={excluindo}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={excluir}
+              disabled={excluindo}
+              className="bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500"
+            >
+              {excluindo ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={modalAberto} onOpenChange={setModalAberto}>
         <DialogContent aria-labelledby="dialog-cliente-titulo" aria-describedby="dialog-cliente-desc">
